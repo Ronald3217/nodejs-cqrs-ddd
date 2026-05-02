@@ -134,3 +134,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# project build output
+dist/
+build/
+
+# IDE directories
+.idea/
+.vscode/
+*.suo
+*.ntvs*
