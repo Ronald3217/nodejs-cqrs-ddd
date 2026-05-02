@@ -1,0 +1,25 @@
+{
+  "name": "10.-nodejs-cqrs-ddd",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/Apps/Backend/Start.ts",
+    "start": "node build/index.js",
+    "build": "tsc && tsc-alias",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "25.6.0",
+    "tsc-alias": "1.8.16",
+    "tsx": "^4.21.0",
+    "typescript": "6.0.3"
+  }
+}
