@@ -28,13 +28,50 @@ src/
 ```bash
 src/
 └── Apps/
-    └── Backend/
-        ├── DependencyInjection/
-        │   └── Container.ts       <-- Inyección de dependencias
-        ├── Routes/
-        │   └── Index.ts           <-- Rutas Express
-        ├── Server.ts              <-- Configuración del servidor
-        └── Start.ts               <-- Punto de entrada
+    ├── Backend/                        <-- Servidor HTTP (API REST)
+    │   ├── DependencyInjection/
+    │   │   └── Container.ts            <-- Composición de handlers y repos
+    │   ├── Routes/
+    │   │   └── Index.ts                <-- Rutas Express
+    │   ├── Server.ts                   <-- Configuración del servidor
+    │   └── Start.ts                    <-- Punto de entrada
+    │
+    └── CLI/                            <-- Interfaz de línea de comandos
+        └── Index.ts                    <-- Punto de entrada CLI
+```
+
+### ¿Por qué el Container está en Backend?
+
+El **Container** contiene la **composición específica** de cada aplicación:
+
+```typescript
+// En Container se configuran:
+// - Los handlers concretos (RegisterUserCommandHandler)
+// - Los repositorios (MongoUserRepository, MySqlUserRepository)
+// - Las implementaciones de buses (InMemory, EventEmitter, RabbitMQ)
+```
+
+**Beneficios de no separar la inicialización:**
+
+1. **Simplicidad**: Un solo lugar donde defines qué necesita tu app
+2. **Consistencia**: La API y CLI usan la misma composición
+3. **Mantenimiento**: Cuando agregues un handler, solo lo registras una vez
+4. **Flexibilidad**: Cada app (Backend/CLI/Worker) puede tener su propio Container si necesita diferentes configuraciones
+
+**Si tienes múltiples apps con diferentes necesidades:**
+```typescript
+// src/Apps/Backend/Container.ts   → API REST (HTTP handlers)
+// src/Apps/CLI/Container.ts       → CLI (solo algunos commands)
+// src/Apps/Worker/Container.ts   → Jobs (eventos, no HTTP)
+```
+
+### Ejemplo de uso del CLI
+```bash
+# Crear usuario
+npm run cli -- create admin@test.com mypassword123
+
+# Listar usuarios
+npm run cli -- list
 ```
 
 ## Diagrama para Cursos
