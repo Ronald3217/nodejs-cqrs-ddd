@@ -6,26 +6,35 @@ src/
 └── Context/
     └── Users/
         ├── Application/
-        │   ├── Commands/           <-- Escrituras (C)
+        │   ├── Commands/
         │   │   └── RegisterUser/
-        │   │       ├── RegisterUserCommand.ts        (DTO: email, password, etc.)
-        │   │       └── RegisterUserCommandHandler.ts (Lógica de orquestación)
-        │   ├── Queries/            <-- Lecturas (Q)
-        │   │   └── FindUserById/
-        │   │       ├── FindUserByIdQuery.ts
-        │   │       └── FindUserByIdQueryHandler.ts
-        │   └── Response/           <-- DTOs de salida (UserResponse.ts)
+        │   │       ├── RegisterUserCommand.ts        <-- DTO: email, password
+        │   │       └── RegisterUserCommandHandler.ts <-- Lógica de orquestación
+        │   └── Queries/
+        │       └── GetUserById/
+        │           ├── GetUserByIdQuery.ts           <-- Query con filtro id
+        │           └── GetUserByIdQueryHandler.ts    <-- Lógica de lectura
         ├── Domain/
         │   ├── User.ts             <-- Entidad (id: string, email: string, etc.)
         │   ├── UserRepository.ts   <-- Interfaz (Puerto)
-        │   ├── UserPassword.ts     <-- Value Object (Opcional, para lógica de hash)
         │   └── Events/
         │       └── UserRegisteredDomainEvent.ts
         └── Infrastructure/
-            ├── Persistence/
-            │   └── MongoUserRepository.ts (O la implementación que prefieras)
-            └── Services/
-                └── BcryptPasswordHasher.ts (Implementación de seguridad)
+            └── Persistence/
+                └── MongoUserRepository.ts (Implementación del repositorio)
+```
+
+## Diagrama de Apps (Entry Points)
+```bash
+src/
+└── Apps/
+    └── Backend/
+        ├── DependencyInjection/
+        │   └── Container.ts       <-- Inyección de dependencias
+        ├── Routes/
+        │   └── Index.ts           <-- Rutas Express
+        ├── Server.ts              <-- Configuración del servidor
+        └── Start.ts               <-- Punto de entrada
 ```
 
 ## Diagrama para Cursos
@@ -34,19 +43,18 @@ src/
 └── Context/
     └── Courses/
         ├── Application/
-        │   ├── Commands/           <-- Acciones de escritura (Create, Update, Delete)
-        │   │   ├── CreateCourse/
-        │   │   │   ├── CreateCourseCommand.ts        (DTO de entrada)
-        │   │   │   └── CreateCourseCommandHandler.ts (La lógica del "Caso de Uso")
-        │   ├── Queries/            <-- Acciones de lectura (Find, Search, List)
-        │   │   ├── GetCourseById/
-        │   │   │   ├── GetCourseByIdQuery.ts
-        │   │   │   └── GetCourseByIdQueryHandler.ts
-        │   └── Response/           <-- DTOs de salida para las Queries
+        │   ├── Commands/
+        │   │   └── CreateCourse/
+        │   │       ├── CreateCourseCommand.ts        <-- DTO de entrada
+        │   │       └── CreateCourseCommandHandler.ts <-- Lógica del "Caso de Uso"
+        │   └── Queries/
+        │       └── GetCourseById/
+        │           ├── GetCourseByIdQuery.ts
+        │           └── GetCourseByIdQueryHandler.ts
         ├── Domain/
-        │   ├── Course.ts           <-- Tu Entidad (usando UUID string plano)
+        │   ├── Course.ts           <-- Entidad (usando UUID string plano)
         │   ├── CourseRepository.ts <-- Interfaz del puerto
-        │   └── Events/             <-- Domain Events (fundamentales en CQRS)
+        │   └── Events/             <-- Domain Events
         └── Infrastructure/
             └── Persistence/
                 └── TypeOrmCourseRepository.ts
@@ -57,29 +65,28 @@ src/
 src/
 └── Context/
     └── Shared/
-        ├── Application/
-        │   ├── Command/
-        │   │   └── Command.ts           <-- Interfaz/Clase base que extienden todos los Commands
-        │   ├── Query/
-        │   │   ├── Query.ts             <-- Interfaz base para todas las Queries
-        │   │   └── Response.ts          <-- Interfaz base para los DTOs de respuesta
-        │   └── Bus/
-        │       ├── CommandBus.ts        <-- Interfaz del bus de comandos (Puerto)
-        │       ├── QueryBus.ts          <-- Interfaz del bus de queries (Puerto)
-        │       └── EventBus.ts          <-- Interfaz para disparar eventos (Puerto)
         ├── Domain/
+        │   ├── Commands/
+        │   │   ├── Command.ts          <-- Clase base que extienden todos los Commands
+        │   │   └── CommandHandler.ts   <-- Interfaz para handlers de comandos
+        │   ├── Queries/
+        │   │   ├── Query.ts            <-- Interfaz base para todas las Queries
+        │   │   └── QueryHandler.ts     <-- Interfaz para handlers de queries
+        │   ├── Bus/
+        │   │   ├── CommandBus.ts        <-- Interfaz del bus de comandos (Puerto)
+        │   │   ├── QueryBus.ts          <-- Interfaz del bus de queries (Puerto)
+        │   │   └── EventBus.ts          <-- Interfaz del bus de eventos (Puerto)
+        │   ├── Events/
+        │   │   ├── DomainEvent.ts       <-- Clase base para todos los eventos de dominio
+        │   │   └── DomainEventSubscriber.ts <-- Interfaz para suscriptores de eventos
         │   ├── AggregateRoot.ts         <-- Clase base para entidades que disparan eventos
-        │   ├── ValueObject/
-        │   │   └── StringValueObject.ts <-- Utilidad para envolver strings (opcional)
-        │   └── Events/
-        │       └── DomainEvent.ts       <-- Clase base para todos los eventos de dominio
+        │   └── Response.ts              <-- Interfaz base para los DTOs de respuesta
         └── Infrastructure/
-            ├── Bus/
-            │   ├── InMemoryCommandBus.ts <-- Implementación real usando una librería o nativo
-            │   ├── InMemoryQueryBus.ts
-            │   └── EventEmitterEventBus.ts
-            └── Persistence/
-                └── MongoClientFactory.ts <-- Factoría para conexiones de DB (si usas Mongo/TypeORM)
+            └── Bus/
+                ├── InMemoryCommandBus.ts   <-- Implementación del CommandBus
+                ├── InMemoryQueryBus.ts     <-- Implementación del QueryBus
+                ├── InMemoryEventBus.ts     <-- Implementación del EventBus (en memoria)
+                └── EventEmitterEventBus.ts <-- Implementación del EventBus (EventEmitter)
 ```
 
 ## Flujo de un Command y CommandHandler
@@ -141,3 +148,86 @@ Las diferencias clave en el viaje de la Query:
 4. Efectos secundarios: Por definición, una Query nunca debe modificar la base de datos. Es una operación segura y repetible (idempotente).
 
 Con estos dos diagramas (Command y Query) ya tienes el mapa mental completo de cómo se mueve la información en tu sistema. ¡Mucho ánimo con ese repaso!
+
+## Flujo de un Domain Event
+El flujo de eventos muestra cómo las entidades del dominio pueden publicar eventos que serán procesados por suscriptores de forma asíncrona.
+
+```bash
+[ Capa de Dominio ]              [ Capa de Aplicación ]       [ Capa de Infraestructura ]
+ +---------------------+        +---------------------+      +------------------------+
+ |                     |        |                     |      |                        |
+ |  1. ENTIDAD        |        |  3. COMMAND HANDLER |      |  4. EVENT BUS         |
+ |  (AggregateRoot)   |        |  (Persiste entidad) |      |  (InMemory/Emitter)   |
+ |         |          |        |           |          |      |           |            |
+ |         v          |        |           v          |      |           v            |
+ |  2. PUBLICA EVENTO |------->|  5. DISPARA EVENTOS |<-----|  6. BUSCA SUSCRIPTORES|
+ | (DomainEvent)      |        | (eventBus.publish) |      |  (por nombre clase)   |
+ |                     |        |           |          |      |           |            |
+ +---------------------+        +-----------|----------+      +-----------|------------+
+                                               |
+                    +--------------------------+--------------------------+
+                    |                          |                          |
+                    v                          v                          v
+             [ 7. SUBSCRIPTOR 1 ]      [ 7. SUBSCRIPTOR 2 ]      [ 7. SUBSCRIPTOR N ]
+             (Ej: Enviar email)         (Ej: Notificar audit)       (Ej: Actualizar cache)
+```
+
+Ejemplo de uso:
+```typescript
+// 1. El CommandHandler recibe un comando
+class RegisterUserCommandHandler {
+    constructor(
+        private readonly userRepository: UserRepository,
+        private readonly eventBus: EventBus
+    ) {}
+
+    async handle(command: RegisterUserCommand): Promise<void> {
+        // 2. Crea la entidad (AggregateRoot)
+        const user = User.create(command.email, command.password);
+
+        // 3. Persiste la entidad
+        await this.userRepository.save(user);
+
+        // 4. Publica los eventos que generó la entidad
+        this.eventBus.publish(user.pullEvents());
+    }
+}
+
+// 5. El suscriptor escucha y reacciona
+class SendWelcomeEmailSubscriber implements DomainEventSubscriber<UserRegisteredDomainEvent> {
+    async on(event: UserRegisteredDomainEvent): Promise<void> {
+        // Enviar email de bienvenida
+        console.log(`Enviando email a ${event.email}`);
+    }
+
+    subscribedTo(): new (...args: any[]) => UserRegisteredDomainEvent {
+        return UserRegisteredDomainEvent;
+    }
+}
+```
+
+## Nombre de clases: .name vs .constructor.name
+
+En los Buses usamos ambos indistintamente según el contexto:
+
+| Contexto | Input tipo | Código |
+|----------|------------|--------|
+| **Constructor** (registrar handler) | Clase | `handler.subscribedTo().name` |
+| **dispatch/ask/publish** (buscar handler) | Instancia | `command.constructor.name` |
+
+**¿Por qué?**
+
+- `.name` → funciona en **clases** directamente (`MiClase.name` → "MiClase")
+- `.constructor.name` → necesario en **instancias** (`new MiClase().constructor.name` → "MiClase")
+
+Ejemplo:
+```typescript
+// Tienes la CLASE → .name directo
+const MyClass = RegisterUserCommand;
+MyClass.name  // "RegisterUserCommand" ✅
+
+// Tienes una INSTANCIA → necesitas .constructor
+const command = new RegisterUserCommand("email@test.com");
+command.name        // undefined ❌
+command.constructor.name  // "RegisterUserCommand" ✅
+```
