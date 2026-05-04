@@ -1,6 +1,7 @@
 # CQRS: Aprendiendo CQRS en Node.js (CQRS, Hexagonal y DDD)
 
 ## Diagrama para Usuarios
+
 ```bash
 src/
 └── Context/
@@ -25,6 +26,7 @@ src/
 ```
 
 ## Diagrama de Apps (Entry Points)
+
 ```bash
 src/
 └── Apps/
@@ -59,6 +61,7 @@ El **Container** contiene la **composición específica** de cada aplicación:
 4. **Flexibilidad**: Cada app (Backend/CLI/Worker) puede tener su propio Container si necesita diferentes configuraciones
 
 **Si tienes múltiples apps con diferentes necesidades:**
+
 ```typescript
 // src/Apps/Backend/Container.ts   → API REST (HTTP handlers)
 // src/Apps/CLI/Container.ts       → CLI (solo algunos commands)
@@ -66,6 +69,7 @@ El **Container** contiene la **composición específica** de cada aplicación:
 ```
 
 ### Ejemplo de uso del CLI
+
 ```bash
 # Crear usuario
 npm run cli -- create admin@test.com mypassword123
@@ -75,6 +79,7 @@ npm run cli -- list
 ```
 
 ## Diagrama para Cursos
+
 ```bash
 src/
 └── Context/
@@ -98,6 +103,7 @@ src/
 ```
 
 ## Shared context Diagram
+
 ```bash
 src/
 └── Context/
@@ -127,7 +133,9 @@ src/
 ```
 
 ## Flujo de un Command y CommandHandler
+
 Este diagrama resume el "viaje" que realiza un comando desde que el usuario hace clic en un botón (o envía una petición API) hasta que el sistema ejecuta la lógica de negocio.
+
 ```bash
 [ Capa de Infraestructura ]       [ Capa de Aplicación ]       [ Capa de Dominio ]
  +-----------------------+        +----------------------+      +------------------+
@@ -145,6 +153,7 @@ Este diagrama resume el "viaje" que realiza un comando desde que el usuario hace
                                    [ 4.5 COMMAND HANDLER ]
                                    (Ejecuta Caso de Uso)
 ```
+
 Los hitos del viaje:
 El Disparador (Controlador): Es la puerta de entrada. Su única misión es validar que la petición HTTP sea correcta y transformarla en un objeto Command.
 
@@ -157,6 +166,7 @@ El Ejecutor (Handler): El Bus llama al método handle() del experto. Aquí es do
 Repasar este flujo te ayudará a ver que el Command es simplemente un mensaje viajando por una tubería organizada. ¡Hasta la próxima!
 
 ## Flujo de un Query y QueryHandler
+
 El flujo de una Query es similar al del Command, pero con una diferencia crítica: el camino de vuelta. Mientras que el Command es una orden de "disparar y olvidar", la Query es una conversación donde esperas una respuesta específica.
 
 Aquí tienes el diagrama del flujo para que lo compares con el anterior:
@@ -179,6 +189,7 @@ Aquí tienes el diagrama del flujo para que lo compares con el anterior:
 ```
 
 Las diferencias clave en el viaje de la Query:
+
 1. La Pregunta (Query): A diferencia del Command (que suele llevar muchos datos para crear/modificar), la Query suele llevar solo filtros o identificadores (ej: userId, courseId).
 2. El Contrato de Respuesta (Response/DTO): El Handler no devuelve la entidad del dominio directamente. Construye un objeto Response (un DTO plano). Esto es vital para que, si tu base de datos cambia, tu API no se rompa.
 3. El camino de retorno: El QueryBus tiene un return. En el código verás un return await handler.handle(query). Esa respuesta viaja de regreso por todas las capas hasta llegar al Controlador, que la envía al cliente (JSON).
@@ -187,59 +198,61 @@ Las diferencias clave en el viaje de la Query:
 Con estos dos diagramas (Command y Query) ya tienes el mapa mental completo de cómo se mueve la información en tu sistema. ¡Mucho ánimo con ese repaso!
 
 ## Flujo de un Domain Event
+
 El flujo de eventos muestra cómo las entidades del dominio pueden publicar eventos que serán procesados por suscriptores de forma asíncrona.
 
 ```bash
 [ Capa de Dominio ]              [ Capa de Aplicación ]       [ Capa de Infraestructura ]
  +---------------------+        +---------------------+      +------------------------+
  |                     |        |                     |      |                        |
- |  1. ENTIDAD        |        |  3. COMMAND HANDLER |      |  4. EVENT BUS         |
- |  (AggregateRoot)   |        |  (Persiste entidad) |      |  (InMemory/Emitter)   |
- |         |          |        |           |          |      |           |            |
- |         v          |        |           v          |      |           v            |
- |  2. PUBLICA EVENTO |------->|  5. DISPARA EVENTOS |<-----|  6. BUSCA SUSCRIPTORES|
- | (DomainEvent)      |        | (eventBus.publish) |      |  (por nombre clase)   |
- |                     |        |           |          |      |           |            |
- +---------------------+        +-----------|----------+      +-----------|------------+
-                                               |
-                    +--------------------------+--------------------------+
-                    |                          |                          |
-                    v                          v                          v
-             [ 7. SUBSCRIPTOR 1 ]      [ 7. SUBSCRIPTOR 2 ]      [ 7. SUBSCRIPTOR N ]
-             (Ej: Enviar email)         (Ej: Notificar audit)       (Ej: Actualizar cache)
+ |  1. ENTIDAD         |        |  3. COMMAND HANDLER |      |  4. EVENT BUS          |
+ |  (AggregateRoot)    |        |  (Persiste entidad) |      |  (InMemory/Emitter)    |
+ |         |           |        |           |         |      |           |            |
+ |         v           |        |           v         |      |           v            |
+ |  2. PUBLICA EVENTO  |------->|  5. DISPARA EVENTOS |<-----|  6. BUSCA SUSCRIPTORES |
+ | (DomainEvent)       |        | (eventBus.publish)  |      |  (por nombre clase)    |
+ |                     |        |           |         |      |           |            |
+ +---------------------+        +-----------|----------+     +-----------|------------+
+                                            |
+                 +--------------------------+--------------------------+
+                 |                          |                          |
+                 v                          v                          v
+            [ 7. SUBSCRIPTOR 1 ]      [ 7. SUBSCRIPTOR 2 ]      [ 7. SUBSCRIPTOR N ]
+            (Ej: Enviar email)         (Ej: Notificar audit)       (Ej: Actualizar cache)
 ```
 
 Ejemplo de uso:
+
 ```typescript
 // 1. El CommandHandler recibe un comando
 class RegisterUserCommandHandler {
-    constructor(
-        private readonly userRepository: UserRepository,
-        private readonly eventBus: EventBus
-    ) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly eventBus: EventBus,
+  ) {}
 
-    async handle(command: RegisterUserCommand): Promise<void> {
-        // 2. Crea la entidad (AggregateRoot)
-        const user = User.create(command.email, command.password);
+  async handle(command: RegisterUserCommand): Promise<void> {
+    // 2. Crea la entidad (AggregateRoot)
+    const user = User.create(command.email, command.password);
 
-        // 3. Persiste la entidad
-        await this.userRepository.save(user);
+    // 3. Persiste la entidad
+    await this.userRepository.save(user);
 
-        // 4. Publica los eventos que generó la entidad
-        this.eventBus.publish(user.pullEvents());
-    }
+    // 4. Publica los eventos que generó la entidad
+    this.eventBus.publish(user.pullEvents());
+  }
 }
 
 // 5. El suscriptor escucha y reacciona
 class SendWelcomeEmailSubscriber implements DomainEventSubscriber<UserRegisteredDomainEvent> {
-    async on(event: UserRegisteredDomainEvent): Promise<void> {
-        // Enviar email de bienvenida
-        console.log(`Enviando email a ${event.email}`);
-    }
+  async on(event: UserRegisteredDomainEvent): Promise<void> {
+    // Enviar email de bienvenida
+    console.log(`Enviando email a ${event.email}`);
+  }
 
-    subscribedTo(): new (...args: any[]) => UserRegisteredDomainEvent {
-        return UserRegisteredDomainEvent;
-    }
+  subscribedTo(): new (...args: any[]) => UserRegisteredDomainEvent {
+    return UserRegisteredDomainEvent;
+  }
 }
 ```
 
@@ -247,10 +260,10 @@ class SendWelcomeEmailSubscriber implements DomainEventSubscriber<UserRegistered
 
 En los Buses usamos ambos indistintamente según el contexto:
 
-| Contexto | Input tipo | Código |
-|----------|------------|--------|
-| **Constructor** (registrar handler) | Clase | `handler.subscribedTo().name` |
-| **dispatch/ask/publish** (buscar handler) | Instancia | `command.constructor.name` |
+| Contexto                                  | Input tipo | Código                        |
+| ----------------------------------------- | ---------- | ----------------------------- |
+| **Constructor** (registrar handler)       | Clase      | `handler.subscribedTo().name` |
+| **dispatch/ask/publish** (buscar handler) | Instancia  | `command.constructor.name`    |
 
 **¿Por qué?**
 
@@ -258,13 +271,14 @@ En los Buses usamos ambos indistintamente según el contexto:
 - `.constructor.name` → necesario en **instancias** (`new MiClase().constructor.name` → "MiClase")
 
 Ejemplo:
+
 ```typescript
 // Tienes la CLASE → .name directo
 const MyClass = RegisterUserCommand;
-MyClass.name  // "RegisterUserCommand" ✅
+MyClass.name; // "RegisterUserCommand" ✅
 
 // Tienes una INSTANCIA → necesitas .constructor
-const command = new RegisterUserCommand("email@test.com");
-command.name        // undefined ❌
-command.constructor.name  // "RegisterUserCommand" ✅
+const command = new RegisterUserCommand('email@test.com');
+command.name; // undefined ❌
+command.constructor.name; // "RegisterUserCommand" ✅
 ```
