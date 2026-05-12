@@ -1,5 +1,5 @@
 {
-  "name": "10.-nodejs-cqrs-ddd",
+  "name": "nodejs-cqrs-ddd",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
