@@ -7,7 +7,9 @@
     "rootDir": "./src",
     "paths": {
       "@/*": ["./src/*"],
-      "@/shared": ["./src/shared"]
+      "@/Apps/*": ["./src/Apps/*"],
+      "@/Context/*": ["./src/Context/*"],
+      "@/Context/Shared/*": ["./src/Context/Shared/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
